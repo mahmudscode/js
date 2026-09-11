@@ -15,3 +15,13 @@ const person = {
 const massage = `hi , ${person.name} has a " ${a} access to ${number[2]} " `;
 
 console.log(massage);
+
+// Arrow Functions
+const add = (x, y) => x + y;
+console.log(add(5, 3)); // 8
+
+const greet = name => `Hello, ${name}!`;
+console.log(greet('John')); // Hello, John!
+
+const sayHi = () => console.log('Hi there!');
+sayHi(); // Hi there!
