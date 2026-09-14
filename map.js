@@ -1,11 +1,11 @@
 const numbers = [1, 2, 3, 4, 5];
 
 // const double =[];
-// for (const num of numbers) {
-//     const doublel = num * 2;
-//     double.push(doublel);
-// }
-// console.log(double); // Output: [2, 4, 6, 8, 10]
+for (const num of numbers) {
+    const doublel = num * 2;
+    double.push(doublel);
+}
+console.log(double); // Output: [2, 4, 6, 8, 10]
 
 function doubleit(num) {
     return num * 2;
@@ -13,3 +13,11 @@ function doubleit(num) {
 
 const result = numbers.map(doubleit);
 console.log(result); // Output: [2, 4, 6, 8, 10]
+
+
+const double2 = n=> n * 2;
+const result2 = numbers.map(double2);
+console.log(result2); // Output: [2, 4, 6, 8, 10]
+
+const result3 = numbers.map(n => n * 2);
+console.log(result3); // Output: [2, 4, 6, 8, 10]
