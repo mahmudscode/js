@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!--
+  Chapter 28 — Events
+  Open this file directly in any browser. Demonstrates event bubbling vs
+  capturing order (with an on-page log, not just devtools), and event
+  delegation for a dynamic list.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Chapter 28 — Events Demo</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 560px; margin: 40px auto; padding: 0 16px; }
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1.05rem; margin-top: 2.5rem; }
+  #outer { background: #cfe8ff; padding: 24px; cursor: pointer; border-radius: 8px; }
+  #middle { background: #a7d0ff; padding: 24px; cursor: pointer; border-radius: 8px; }
+  #inner { background: #6fb1ff; padding: 24px; cursor: pointer; border-radius: 8px; color: white; }
+  #log { background: #111; color: #0f0; font-family: monospace; font-size: 0.85rem;
+         padding: 12px; height: 160px; overflow-y: auto; border-radius: 6px; margin-top: 12px; }
+  button { padding: 6px 10px; cursor: pointer; }
+  #dyn-list { list-style: none; padding: 0; }
+  #dyn-list li { padding: 8px; border-bottom: 1px solid #ddd; cursor: pointer; }
+  #dyn-list li:hover { background: #f0f0f0; }
+  .controls { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+  <h1>Events Demo: Bubbling, Capturing, Delegation</h1>
+
+  <h2>1. Click any box — watch the log below</h2>
+  <div id="outer">outer
+    <div id="middle">middle
+      <div id="inner">inner (click me)</div>
+    </div>
+  </div>
+  <div class="controls">
+    <button id="clear-log" type="button">Clear log</button>
+    <button id="toggle-stop" type="button">
+      Toggle: middle.stopPropagation() = OFF
+    </button>
+  </div>
+  <div id="log"></div>
+
+  <h2>2. Event delegation with a dynamic list</h2>
+  <p>One listener on the &lt;ul&gt;, attached once, handles clicks on
+     every &lt;li&gt; — including ones added after the page loaded.</p>
+  <button id="add-item" type="button">Add item</button>
+  <ul id="dyn-list">
+    <li>Item 1 (present at page load)</li>
+    <li>Item 2 (present at page load)</li>
+  </ul>
+
+  <script>
+    // --- Part 1: bubbling vs capturing, with an on-page log panel ---
+    const logEl = document.getElementById("log");
+    function log(message) {
+      const line = document.createElement("div");
+      line.textContent = message;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    const outer = document.getElementById("outer");
+    const middle = document.getElementById("middle");
+    const inner = document.getElementById("inner");
+
+    let middleStopsPropagation = false;
+
+    // Capturing-phase listeners (third argument = true)
+    outer.addEventListener("click", () => log("outer  — CAPTURE phase"), true);
+    middle.addEventListener("click", () => log("middle — CAPTURE phase"), true);
+    inner.addEventListener("click", () => log("inner  — CAPTURE/TARGET phase"), true);
+
+    // Bubbling-phase listeners (default)
+    inner.addEventListener("click", () => log("inner  — TARGET/BUBBLE phase"));
+    middle.addEventListener("click", (event) => {
+      log("middle — BUBBLE phase");
+      if (middleStopsPropagation) {
+        event.stopPropagation();
+        log("       ...middle called stopPropagation() — outer will NOT see this click");
+      }
+    });
+    outer.addEventListener("click", () => log("outer  — BUBBLE phase"));
+
+    document.getElementById("clear-log").addEventListener("click", () => {
+      logEl.innerHTML = "";
+    });
+
+    const toggleBtn = document.getElementById("toggle-stop");
+    toggleBtn.addEventListener("click", () => {
+      middleStopsPropagation = !middleStopsPropagation;
+      toggleBtn.textContent =
+        "Toggle: middle.stopPropagation() = " + (middleStopsPropagation ? "ON" : "OFF");
+    });
+
+    // --- Part 2: event delegation ---
+    const list = document.getElementById("dyn-list");
+    let itemCount = 2;
+
+    // ONE listener on the parent handles all current AND future <li> clicks.
+    list.addEventListener("click", (event) => {
+      const item = event.target.closest("li");
+      if (!item) return;
+      item.style.background = item.style.background === "gold" ? "" : "gold";
+      log("Delegated click on: " + item.textContent);
+    });
+
+    document.getElementById("add-item").addEventListener("click", () => {
+      itemCount++;
+      const li = document.createElement("li");
+      li.textContent = "Item " + itemCount + " (added dynamically)";
+      list.appendChild(li);
+      // Notice: no new addEventListener call needed for this new <li>.
+    });
+  </script>
+</body>
+</html>

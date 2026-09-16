@@ -1,0 +1,24 @@
+{
+  "name": "js-book-ch31-example",
+  "version": "1.0.0",
+  "description": "Example package.json for Chapter 31 of the JavaScript book — see README.md in this folder for a field-by-field explanation.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

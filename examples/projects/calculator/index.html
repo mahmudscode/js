@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Chapter 35 — Calculator</title>
+<style>
+  :root {
+    --bg: #1e1f29;
+    --display-bg: #111219;
+    --btn-bg: #2e2f3e;
+    --btn-hover: #3c3d52;
+    --op-bg: #ff9f43;
+    --op-hover: #ffb267;
+    --text: #f5f5f7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .calculator {
+    width: 320px;
+    background: var(--bg);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  }
+  .display {
+    background: var(--display-bg);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 24px 16px;
+    text-align: right;
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  button {
+    font-size: 1.25rem;
+    padding: 18px 0;
+    border: none;
+    border-radius: 10px;
+    background: var(--btn-bg);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  button:hover { background: var(--btn-hover); }
+  button:active { transform: scale(0.97); }
+  button.operator { background: var(--op-bg); color: #1e1f29; font-weight: 600; }
+  button.operator:hover { background: var(--op-hover); }
+  button.span-two { grid-column: span 2; }
+</style>
+</head>
+<body>
+
+<div class="calculator">
+  <div class="display" id="display">0</div>
+  <div class="buttons">
+    <button data-action="clear" class="span-two">AC</button>
+    <button data-action="backspace">⌫</button>
+    <button data-action="operator" data-value="÷" class="operator">÷</button>
+
+    <button data-action="digit" data-value="7">7</button>
+    <button data-action="digit" data-value="8">8</button>
+    <button data-action="digit" data-value="9">9</button>
+    <button data-action="operator" data-value="×" class="operator">×</button>
+
+    <button data-action="digit" data-value="4">4</button>
+    <button data-action="digit" data-value="5">5</button>
+    <button data-action="digit" data-value="6">6</button>
+    <button data-action="operator" data-value="-" class="operator">−</button>
+
+    <button data-action="digit" data-value="1">1</button>
+    <button data-action="digit" data-value="2">2</button>
+    <button data-action="digit" data-value="3">3</button>
+    <button data-action="operator" data-value="+" class="operator">+</button>
+
+    <button data-action="digit" data-value="0" class="span-two">0</button>
+    <button data-action="decimal">.</button>
+    <button data-action="equals" class="operator">=</button>
+  </div>
+</div>
+
+<script>
+  // Chapter 35 — Project 2: In-browser calculator
+  // Single source of truth for the calculator's state. Every button click
+  // or keypress mutates this object, then calls render() once.
+  const state = {
+    display: "0",
+    firstOperand: null,
+    operator: null,
+    waitingForSecondOperand: false,
+  };
+
+  const displayEl = document.getElementById("display");
+
+  function render() {
+    displayEl.textContent =
+      state.display === "Error" || Number.isNaN(Number(state.display))
+        ? "Error"
+        : state.display;
+  }
+
+  function inputDigit(digit) {
+    if (state.waitingForSecondOperand) {
+      state.display = digit;
+      state.waitingForSecondOperand = false;
+    } else {
+      state.display = state.display === "0" ? digit : state.display + digit;
+    }
+  }
+
+  function inputDecimal() {
+    if (state.waitingForSecondOperand) {
+      state.display = "0.";
+      state.waitingForSecondOperand = false;
+      return;
+    }
+    if (!state.display.includes(".")) {
+      state.display += ".";
+    }
+  }
+
+  function calculate(first, second, operator) {
+    switch (operator) {
+      case "+": return first + second;
+      case "-": return first - second;
+      case "×": return first * second;
+      case "÷": return second === 0 ? NaN : first / second;
+      default: return second;
+    }
+  }
+
+  function handleOperator(nextOperator) {
+    const inputValue = parseFloat(state.display);
+
+    if (state.operator && state.waitingForSecondOperand) {
+      state.operator = nextOperator;
+      return;
+    }
+
+    if (state.firstOperand === null) {
+      state.firstOperand = inputValue;
+    } else if (state.operator) {
+      const result = calculate(state.firstOperand, inputValue, state.operator);
+      state.display = String(result);
+      state.firstOperand = result;
+    }
+
+    state.waitingForSecondOperand = true;
+    state.operator = nextOperator;
+  }
+
+  function handleEquals() {
+    const inputValue = parseFloat(state.display);
+    if (state.operator === null || state.waitingForSecondOperand) return;
+
+    const result = calculate(state.firstOperand, inputValue, state.operator);
+    state.display = String(result);
+    state.firstOperand = null;
+    state.operator = null;
+    state.waitingForSecondOperand = false;
+  }
+
+  function backspace() {
+    if (state.display.length <= 1 || state.display === "Error") {
+      state.display = "0";
+    } else {
+      state.display = state.display.slice(0, -1);
+    }
+  }
+
+  function resetCalculator() {
+    state.display = "0";
+    state.firstOperand = null;
+    state.operator = null;
+    state.waitingForSecondOperand = false;
+  }
+
+  // --- Button clicks ---------------------------------------------------
+  document.querySelector(".buttons").addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    const { action, value } = button.dataset;
+
+    if (action === "digit") inputDigit(value);
+    else if (action === "decimal") inputDecimal();
+    else if (action === "operator") handleOperator(value);
+    else if (action === "equals") handleEquals();
+    else if (action === "clear") resetCalculator();
+    else if (action === "backspace") backspace();
+
+    render();
+  });
+
+  // --- Keyboard support -------------------------------------------------
+  document.addEventListener("keydown", (event) => {
+    if (event.key >= "0" && event.key <= "9") inputDigit(event.key);
+    else if (event.key === ".") inputDecimal();
+    else if (event.key === "+" || event.key === "-") handleOperator(event.key);
+    else if (event.key === "*") handleOperator("×");
+    else if (event.key === "/") { event.preventDefault(); handleOperator("÷"); }
+    else if (event.key === "Enter" || event.key === "=") handleEquals();
+    else if (event.key === "Escape") resetCalculator();
+    else if (event.key === "Backspace") backspace();
+    else return; // unhandled key — skip the render, nothing changed
+
+    render();
+  });
+
+  render();
+</script>
+
+</body>
+</html>
